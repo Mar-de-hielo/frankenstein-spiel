@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frankenstein: El Escape al Barco</title>
+    <title>Frankenstein: El Reclamo en el Mar</title>
     <style>
-        /* PALETA DE COLORES REQUERIDA:
-           #000000 (Negro), #483519 (Marrón Oscuro), #6F7C12 (Verde Oliva), 
-           #AAD922 (Verde Lima), #8CFF98 (Verde Menta Neón) */
+        /* PALETA: #000000, #483519, #6F7C12, #AAD922, #8CFF98 */
 
         * {
             box-sizing: border-box;
@@ -32,7 +30,7 @@
             color: #AAD922;
             margin-bottom: 10px;
             text-shadow: 0 0 10px #6F7C12;
-            font-size: 2rem;
+            font-size: 1.8rem;
             text-align: center;
         }
 
@@ -40,335 +38,451 @@
             position: relative;
             width: 800px;
             height: 400px;
-            background: linear-gradient(to bottom, #000000 70%, #483519 100%);
+            background: linear-gradient(to bottom, #000000 60%, #483519 100%);
             border: 4px solid #6F7C12;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(170, 217, 34, 0.3);
+            box-shadow: 0 0 25px rgba(140, 255, 152, 0.2);
             overflow: hidden;
         }
 
-        /* Elementos del juego con diseño minimalista/arcade */
+        /* --- REDISEÑO ESTÉTICO DEL MONSTRUO --- */
         #monster {
             position: absolute;
             left: 80px;
             bottom: 60px;
-            width: 40px;
-            height: 60px;
-            background-color: #AAD922;
-            border-radius: 4px;
-            border: 3px solid #000000;
-            transition: transform 0.1s;
+            width: 45px;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+            transition: transform 0.05s, left 0.5s ease-in-out;
         }
-        /* Detalle del monstruo (Cicatriz/Tornillos estéticos) */
-        #monster::before {
+        /* Cabello */
+        .m-hair {
+            width: 100%;
+            height: 12px;
+            background-color: #000000;
+            border-radius: 4px 4px 0 0;
+        }
+        /* Cabeza/Cara */
+        .m-head {
+            width: 85%;
+            height: 20px;
+            background-color: #AAD922;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 4px;
+        }
+        /* Ojos neón */
+        .m-head::before, .m-head::after {
             content: '';
-            position: absolute;
-            top: 15px; left: -5px;
-            width: 50px; height: 4px;
+            width: 6px;
+            height: 6px;
+            background-color: #8CFF98;
+            box-shadow: 0 0 4px #8CFF98;
+        }
+        /* Saco / Cuerpo */
+        .m-body {
+            width: 100%;
+            height: 38px;
             background-color: #483519;
+            border-top: 4px solid #6F7C12; /* Costura exterior */
+            border-radius: 0 0 4px 4px;
+            position: relative;
+        }
+        /* Cicatriz del pecho */
+        .m-body::after {
+            content: '┼';
+            position: absolute;
+            top: 5px; left: 15px;
+            color: #AAD922;
+            font-size: 12px;
         }
 
+        /* --- EL BARCO DE VÍCTOR --- */
         #creator-ship {
             position: absolute;
             right: 40px;
             bottom: 80px;
-            width: 90px;
-            height: 50px;
+            width: 110px;
+            height: 55px;
             background-color: #483519;
-            border-top: 8px solid #6F7C12;
-            border-radius: 0 0 15px 15px;
+            border-top: 6px solid #6F7C12;
+            border-radius: 0 0 20px 20px;
             animation: floatShip 3s ease-in-out infinite;
+            z-index: 4;
+            transition: right 1s ease-in-out;
         }
-        /* Vela del barco */
+        /* Vela */
         #creator-ship::after {
             content: '';
             position: absolute;
-            bottom: 50px; left: 30px;
+            bottom: 55px; left: 35px;
             width: 0; height: 0;
-            border-left: 40px solid transparent;
-            border-bottom: 50px solid #8CFF98;
+            border-left: 50px solid transparent;
+            border-bottom: 60px solid #8CFF98;
+            opacity: 0.8;
+        }
+        /* Mini Sprite de Víctor en la cubierta */
+        .victor-sprite {
+            position: absolute;
+            top: -25px; left: 15px;
+            width: 15px; height: 25px;
+            background-color: #000000;
+            border: 2px solid #8CFF98;
+            border-radius: 3px 3px 0 0;
         }
 
+        /* --- OBSTÁCULOS --- */
         .obstacle {
             position: absolute;
             bottom: 60px;
-            width: 25px;
-            height: 40px;
+            width: 28px;
+            height: 45px;
             background-color: #6F7C12;
-            border: 2px solid #AAD922;
-            border-radius: 4px;
+            border: 3px solid #000000;
+            box-shadow: inset 0 0 10px #483519;
+            border-radius: 3px;
         }
 
         #floor {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 60px;
+            bottom: 0; width: 100%; height: 60px;
             background-color: #483519;
             border-top: 6px solid #6F7C12;
+            z-index: 3;
         }
 
-        /* UI y Pantallas */
-        .ui-text {
+        /* --- SISTEMA DE DIÁLOGO (NARRATIVA) --- */
+        #dialogue-overlay {
             position: absolute;
-            top: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #8CFF98;
-            text-shadow: 1px 1px 2px #000000;
+            bottom: 0; left: 0; width: 100%; height: 160px;
+            background-color: rgba(0, 0, 0, 0.95);
+            border-top: 4px solid #AAD922;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 20;
         }
+        .speaker-name {
+            font-weight: bold;
+            color: #AAD922;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        .dialogue-text {
+            color: #8CFF98;
+            font-size: 1rem;
+            line-height: 1.3;
+        }
+        .options-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .opt-btn {
+            background-color: #483519;
+            color: #8CFF98;
+            border: 1px solid #6F7C12;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .opt-btn:hover {
+            background-color: #6F7C12;
+            color: #000000;
+        }
+
+        /* EFECTO TORMENTA AL FINAL */
+        .storm-flash {
+            animation: flash 0.5s ease-out infinite alternate;
+        }
+        @keyframes flash {
+            0%, 90% { background: linear-gradient(to bottom, #000000 60%, #483519 100%); }
+            95% { background: #6F7C12; }
+        }
+
+        /* INTERFAZ COMÚN */
+        .ui-text { position: absolute; top: 15px; font-size: 1.1rem; font-weight: bold; z-index: 2; }
         #distance-ui { left: 20px; }
         #high-ui { right: 20px; }
 
         .screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;
         }
 
         .btn {
-            background-color: #AAD922;
-            color: #000000;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            border-radius: 4px;
+            background-color: #AAD922; color: #000000; border: none;
+            padding: 12px 30px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; margin-top: 15px; border-radius: 4px;
             box-shadow: 0 4px 0 #6F7C12;
-            transition: all 0.1s ease;
         }
-        .btn:hover {
-            background-color: #8CFF98;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #6F7C12;
-        }
-        .btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #6F7C12;
-        }
+        .btn:hover { background-color: #8CFF98; }
 
         .hidden { display: none !important; }
-        
-        p { text-align: center; max-width: 80%; line-height: 1.4; }
-        .instructions { color: #6F7C12; margin-top: 15px; font-size: 0.9rem;}
-
-        /* Animaciones */
         @keyframes floatShip {
             0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(-3deg); }
+            50% { transform: translateY(-8px) rotate(-2deg); }
         }
     </style>
 </head>
 <body>
 
-    <h1>FRANKENSTEIN: CORRE AL BARCO</h1>
+    <h1>FRANKENSTEIN: EL RECLAMO</h1>
     
     <div id="game-container">
-        <div id="distance-ui" class="ui-text">DISTANCIA AL BARCO: <span id="distance">100</span>m</div>
+        <div id="distance-ui" class="ui-text">DISTANCIA: <span id="distance">100</span>m</div>
         <div id="high-ui" class="ui-text">RÉCORD: <span id="highscore">0</span>m</div>
 
-        <div id="monster"></div>
-        <div id="creator-ship"></div>
+        <!-- Monstruo Rediseñado -->
+        <div id="monster">
+            <div class="m-hair"></div>
+            <div class="m-head"></div>
+            <div class="m-body"></div>
+        </div>
+
+        <!-- Barco con Víctor encima -->
+        <div id="creator-ship">
+            <div class="victor-sprite"></div>
+        </div>
+        
         <div id="floor"></div>
 
+        <!-- Caja de Diálogo Cinematográfica -->
+        <div id="dialogue-overlay" class="hidden">
+            <div>
+                <div class="speaker-name" id="speaker">VÍCTOR FRANKENSTEIN</div>
+                <div class="dialogue-text" id="dialogue-box">...</div>
+            </div>
+            <div class="options-container" id="options-box"></div>
+        </div>
+
+        <!-- Pantallas -->
         <div id="start-screen" class="screen">
-            <h2 style="color: #8CFF98; margin-bottom: 10px;">¡ALCANZA A TU CREADOR!</h2>
-            <p>Víctor te ha abandonado y huye en su barco. Esquiva los suministros médicos y cajas para alcanzarlo antes de que sea tarde.</p>
-            <p class="instructions">Presiona ESPACIO o haz CLIC para saltar.</p>
-            <button class="btn" id="start-btn">INICIAR PERSECUCIÓN</button>
+            <h2 style="color: #8CFF98; margin-bottom: 10px;">PERSIGUE A TU CREADOR</h2>
+            <p style="text-align:center; max-width:80%">Víctor huye hacia el océano ártico para borrar su error. Alcánzalo para exigir tus respuestas.</p>
+            <button class="btn" id="start-btn">CORRER AL MUELLE</button>
         </div>
 
         <div id="gameover-screen" class="screen hidden">
-            <h2 style="color: #6F7C12; margin-bottom: 10px;">TE HAS QUEDADO ATRÁS</h2>
-            <p>El barco zarpó y te convertiste en leyenda urbana...</p>
-            <button class="btn" id="retry-btn">INTENTAR DE NUEVO</button>
-        </div>
-
-        <div id="victory-screen" class="screen hidden">
-            <h2 style="color: #8CFF98; margin-bottom: 10px;">¡LO LOGRASTE!</h2>
-            <p>Has alcanzado el barco. Ahora Víctor tendrá que escucharte.</p>
-            <button class="btn" id="win-btn">JUGAR DE NUEVO</button>
+            <h2 style="color: #6F7C12;">PERDIDO EN LA NIEBLA</h2>
+            <button class="btn" id="retry-btn">VOLVER A INTENTAR</button>
         </div>
     </div>
 
-    <p class="instructions" style="margin-top: 20px;">Diseñado con la paleta de colores gótica de neón. ¡Comparte el link con tus amigos!</p>
-
     <script>
         const monster = document.getElementById('monster');
+        const ship = document.getElementById('creator-ship');
         const container = document.getElementById('game-container');
         const distanceEl = document.getElementById('distance');
         const highscoreEl = document.getElementById('highscore');
         
-        // Pantallas y Botones
         const startScreen = document.getElementById('start-screen');
         const gameoverScreen = document.getElementById('gameover-screen');
-        const victoryScreen = document.getElementById('victory-screen');
-        const startBtn = document.getElementById('start-btn');
-        const retryBtn = document.getElementById('retry-btn');
-        const winBtn = document.getElementById('win-btn');
+        const dialogueOverlay = document.getElementById('dialogue-overlay');
+        const speakerEl = document.getElementById('speaker');
+        const dialogueBox = document.getElementById('dialogue-box');
+        const optionsBox = document.getElementById('options-box');
 
-        // Variables de físicas y juego
         let isJumping = false;
         let gravity = 0.6;
-        let position = 0; // Posición vertical del monstruo
+        let position = 0;
         let velocity = 0;
-        
         let gameActive = false;
-        let distanceToShip = 100; 
+        let distanceToShip = 100;
         let highScore = localStorage.getItem('frankHighScore') || 0;
         highscoreEl.innerText = highScore;
 
         let obstacles = [];
         let spawnTimer = 0;
-        let gameSpeed = 5;
+        let gameSpeed = 5.5;
 
-        // Bucle principal del juego
+        // --- ARBOL DE DIÁLOGOS NARRATIVOS ---
+        const dialogueTree = {
+            inicio: {
+                speaker: "VÍCTOR FRANKENSTEIN",
+                text: "¡No... tú! ¿Cómo has llegado hasta aquí? ¡Eres un demonio, una aberración viviente!",
+                options: [
+                    { text: "¿Por qué me creaste si ibas a abandonarme?", next: "reclamo" },
+                    { text: "[Rugir con furia y romper el mástil]", next: "furia" }
+                ]
+            },
+            reclamo: {
+                speaker: "VÍCTOR FRANKENSTEIN",
+                text: "Estaba cegado por la soberbia de vencer a la muerte... pero al ver tus ojos abiertos, vi el verdadero horror. No tienes alma.",
+                options: [
+                    { text: "Tengo sentimientos. Tú me hiciste así. Dame una compañera.", next: "pacto" },
+                    { text: "Si no tengo alma, es porque tú me la negaste. ¡Pagarás!", next: "venganza" }
+                ]
+            },
+            furia: {
+                speaker: "VÍCTOR FRANKENSTEIN",
+                text: "¡Monstruo despiadado! ¡Tus acciones solo confirman el peligro que eres para la humanidad! ¡Jamás tendrás piedad de mí!",
+                options: [
+                    { text: "Solo quería tu aceptación... Ahora solo queda hielo.", next: "finalTriste" }
+                ]
+            },
+            pacto: {
+                speaker: "VÍCTOR FRANKENSTEIN",
+                text: "Maldita sea... Si accedo a crear otra criatura como tú, ¿te exiliarás para siempre en los confines de la tierra?",
+                options: [
+                    { text: "Lo prometo. Jamás volverás a saber de nosotros.", next: "finalPacto" },
+                    { text: "No confío en tus promesas. Tu castigo empieza hoy.", next: "venganza" }
+                ]
+            },
+            venganza: {
+                speaker: "VÍCTOR FRANKENSTEIN",
+                text: "¡Entonces que el mar congelado sea nuestra tumba! ¡No te temo!",
+                options: [
+                    { text: "[El barco se adentra en la tormenta eterna...] Fin.", next: "terminar" }
+                ]
+            },
+            finalTriste: { speaker: "SISTEMA", text: "Víctor cae de rodillas. El monstruo se marcha hacia el norte, estancado en una soledad eterna.", options: [{ text: "Terminar Juego", next: "terminar" }] },
+            finalPacto: { speaker: "SISTEMA", text: "Un trato oscuro se ha sellado. Víctor regresa a su laboratorio; la criatura espera pacientemente en las sombras.", options: [{ text: "Terminar Juego", next: "terminar" }] },
+        };
+
         function gameLoop() {
             if (!gameActive) return;
 
-            // 1. Manejo de Gravedad e Inercia del salto
             if (isJumping || position > 0) {
                 velocity -= gravity;
                 position += velocity;
-                
-                if (position <= 0) {
-                    position = 0;
-                    isJumping = false;
-                    velocity = 0;
-                }
+                if (position <= 0) { position = 0; isJumping = false; velocity = 0; }
             }
             monster.style.bottom = (60 + position) + 'px';
 
-            // 2. Disminuir la distancia al barco de forma progresiva
             if (distanceToShip > 0) {
-                distanceToShip -= 0.05;
+                distanceToShip -= 0.08;
                 distanceEl.innerText = Math.max(0, Math.floor(distanceToShip));
             } else {
-                endGame(true); // Victoria si llega a 0 metros
+                startCinematic();
                 return;
             }
 
-            // 3. Generación y movimiento de obstáculos
             spawnTimer++;
-            if (spawnTimer > Math.random() * 80 + 70) { // Frecuencia orgánica
+            if (spawnTimer > Math.random() * 70 + 60) {
                 createObstacle();
                 spawnTimer = 0;
             }
-
             moveObstacles();
-
             requestAnimationFrame(gameLoop);
         }
 
-        // Registrar saltos (Espacio, Flecha Arriba o Clic en pantalla)
         function triggerJump() {
             if (!isJumping && gameActive) {
                 isJumping = true;
-                velocity = 12; // Fuerza del salto
-                // Pequeño estiramiento estético al saltar (Game Feel)
-                monster.style.transform = "scaleY(1.15)";
-                setTimeout(() => monster.style.transform = "scaleY(1)", 200);
+                velocity = 12.5;
+                monster.style.transform = "scaleY(1.15) scaleX(0.9)";
+                setTimeout(() => monster.style.transform = "scaleY(1) scaleX(1)", 150);
             }
         }
 
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' || e.code === 'ArrowUp') {
-                triggerJump();
-            }
-        });
+        document.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') triggerJump(); });
         container.addEventListener('click', triggerJump);
 
         function createObstacle() {
-            const obstacle = document.createElement('div');
-            obstacle.classList.add('obstacle');
-            obstacle.style.right = '-30px';
-            // Variar ligeramente la altura del obstáculo para que se vea más dinámico
-            obstacle.style.height = (Math.random() * 20 + 35) + 'px';
-            container.appendChild(obstacle);
-            obstacles.push(obstacle);
+            const obs = document.createElement('div');
+            obs.classList.add('obstacle');
+            obs.style.right = '-35px';
+            obs.style.height = (Math.random() * 20 + 35) + 'px';
+            container.appendChild(obs);
+            obstacles.push(obs);
         }
 
         function moveObstacles() {
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 let obs = obstacles[i];
-                let currentRight = parseFloat(obs.style.right);
-                
-                // Mover obstáculo a la izquierda
-                currentRight += gameSpeed;
+                let currentRight = parseFloat(obs.style.right) + gameSpeed;
                 obs.style.right = currentRight + 'px';
 
-                // Obtener posiciones para colisiones (Bounding Boxes)
                 let mRect = monster.getBoundingClientRect();
                 let oRect = obs.getBoundingClientRect();
 
-                // Colisión ajustada (Hitbox ligeramente más pequeña para que sea justo)
-                if (
-                    mRect.left < oRect.right - 5 &&
-                    mRect.right > oRect.left + 5 &&
-                    mRect.bottom > oRect.top + 5
-                ) {
-                    endGame(false); // Game Over
+                if (mRect.left < oRect.right - 6 && mRect.right > oRect.left + 6 && mRect.bottom > oRect.top + 4) {
+                    gameOver();
                     return;
                 }
-
-                // Limpiar obstáculos que salen de pantalla
-                if (currentRight > 850) {
-                    obs.remove();
-                    obstacles.splice(i, 1);
-                }
+                if (currentRight > 850) { obs.remove(); obstacles.splice(i, 1); }
             }
+        }
+
+        // --- ENCUENTRO CLIMÁTICO CON EL CREADOR ---
+        function startCinematic() {
+            gameActive = false;
+            obstacles.forEach(o => o.remove());
+            
+            // Animación: El monstruo salta directo a la cubierta del barco
+            monster.style.left = "620px";
+            monster.style.bottom = "130px";
+            ship.style.animation = "floatShip 1s ease-in-out infinite alternate";
+            
+            // Estética de tormenta/clímax
+            container.classList.add('storm-flash');
+
+            // Desplegar conversación
+            setTimeout(() => {
+                dialogueOverlay.classList.remove('hidden');
+                showDialogue("inicio");
+            }, 1000);
+        }
+
+        function showDialogue(nodeKey) {
+            if (nodeKey === "terminar") {
+                location.reload(); // Reinicia el juego de forma limpia
+                return;
+            }
+
+            const node = dialogueTree[nodeKey];
+            speakerEl.innerText = node.speaker;
+            dialogueBox.innerText = node.text;
+            optionsBox.innerHTML = ""; // Limpiar botones anteriores
+
+            node.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.classList.add('opt-btn');
+                btn.innerText = opt.text;
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showDialogue(opt.next);
+                });
+                optionsBox.appendChild(btn);
+            });
         }
 
         function startGame() {
-            // Resetear estados
             distanceToShip = 100;
-            position = 0;
-            isJumping = false;
-            velocity = 0;
+            position = 0; isJumping = false; velocity = 0;
+            monster.style.left = "80px";
+            container.classList.remove('storm-flash');
             gameActive = true;
-            
-            // Limpiar obstáculos viejos
             obstacles.forEach(obs => obs.remove());
             obstacles = [];
-
-            // Ocultar pantallas de UI
             startScreen.classList.add('hidden');
             gameoverScreen.classList.add('hidden');
-            victoryScreen.classList.add('hidden');
-
-            // Arrancar bucle
+            dialogueOverlay.classList.add('hidden');
             gameLoop();
         }
 
-        function endGame(isVictory) {
+        function gameOver() {
             gameActive = false;
-            if (isVictory) {
-                victoryScreen.classList.remove('hidden');
-            } else {
-                gameoverScreen.classList.remove('hidden');
-                
-                // Guardar puntuación si se corrió más de lo anterior
-                let scoreAchieved = 100 - Math.floor(distanceToShip);
-                if (scoreAchieved > highScore) {
-                    highScore = scoreAchieved;
-                    localStorage.setItem('frankHighScore', highScore);
-                    highscoreEl.innerText = highScore;
-                }
+            gameoverScreen.classList.remove('hidden');
+            let score = 100 - Math.floor(distanceToShip);
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('frankHighScore', highScore);
+                highscoreEl.innerText = highScore;
             }
         }
 
-        // Listeners de botones
-        startBtn.addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
-        retryBtn.addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
-        winBtn.addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
-
+        document.getElementById('start-btn').addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
+        document.getElementById('retry-btn').addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
     </script>
 </body>
 </html>
