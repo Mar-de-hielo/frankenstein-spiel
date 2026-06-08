@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frankenstein: El Escape al Barco</title>
+    <style>
+        /* PALETA DE COLORES REQUERIDA:
+           #000000 (Negro), #483519 (Marrón Oscuro), #6F7C12 (Verde Oliva), 
+           #AAD922 (Verde Lima), #8CFF98 (Verde Menta Neón) */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+        }
+
+        body {
+            background-color: #000000;
+            color: #8CFF98;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: #AAD922;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #6F7C12;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            background: linear-gradient(to bottom, #000000 70%, #483519 100%);
+            border: 4px solid #6F7C12;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(170, 217, 34, 0.3);
+            overflow: hidden;
+        }
+
+        /* Elementos del juego con diseño minimalista/arcade */
+        #monster {
+            position: absolute;
+            left: 80px;
+            bottom: 60px;
+            width: 40px;
+            height: 60px;
+            background-color: #AAD922;
+            border-radius: 4px;
+            border: 3px solid #000000;
+            transition: transform 0.1s;
+        }
+        /* Detalle del monstruo (Cicatriz/Tornillos estéticos) */
+        #monster::before {
+            content: '';
+            position: absolute;
+            top: 15px; left: -5px;
+            width: 50px; height: 4px;
+            background-color: #483519;
+        }
+
+        #creator-ship {
+            position: absolute;
+            right: 40px;
+            bottom: 80px;
+            width: 90px;
+            height: 50px;
+            background-color: #483519;
+            border-top: 8px solid #6F7C12;
+            border-radius: 0 0 15px 15px;
+            animation: floatShip 3s ease-in-out infinite;
+        }
+        /* Vela del barco */
+        #creator-ship::after {
+            content: '';
+            position: absolute;
+            bottom: 50px; left: 30px;
+            width: 0; height: 0;
+            border-left: 40px solid transparent;
+            border-bottom: 50px solid #8CFF98;
+        }
+
+        .obstacle {
+            position: absolute;
+            bottom: 60px;
+            width: 25px;
+            height: 40px;
+            background-color: #6F7C12;
+            border: 2px solid #AAD922;
+            border-radius: 4px;
+        }
+
+        #floor {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #483519;
+            border-top: 6px solid #6F7C12;
+        }
+
+        /* UI y Pantallas */
+        .ui-text {
+            position: absolute;
+            top: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #8CFF98;
+            text-shadow: 1px 1px 2px #000000;
+        }
+        #distance-ui { left: 20px; }
+        #high-ui { right: 20px; }
+
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .btn {
+            background-color: #AAD922;
+            color: #000000;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            border-radius: 4px;
+            box-shadow: 0 4px 0 #6F7C12;
+            transition: all 0.1s ease;
+        }
+        .btn:hover {
+            background-color: #8CFF98;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #6F7C12;
+        }
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #6F7C12;
+        }
+
+        .hidden { display: none !important; }
+        
+        p { text-align: center; max-width: 80%; line-height: 1.4; }
+        .instructions { color: #6F7C12; margin-top: 15px; font-size: 0.9rem;}
+
+        /* Animaciones */
+        @keyframes floatShip {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(-3deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>FRANKENSTEIN: CORRE AL BARCO</h1>
+    
+    <div id="game-container">
+        <div id="distance-ui" class="ui-text">DISTANCIA AL BARCO: <span id="distance">100</span>m</div>
+        <div id="high-ui" class="ui-text">RÉCORD: <span id="highscore">0</span>m</div>
+
+        <div id="monster"></div>
+        <div id="creator-ship"></div>
+        <div id="floor"></div>
+
+        <div id="start-screen" class="screen">
+            <h2 style="color: #8CFF98; margin-bottom: 10px;">¡ALCANZA A TU CREADOR!</h2>
+            <p>Víctor te ha abandonado y huye en su barco. Esquiva los suministros médicos y cajas para alcanzarlo antes de que sea tarde.</p>
+            <p class="instructions">Presiona ESPACIO o haz CLIC para saltar.</p>
+            <button class="btn" id="start-btn">INICIAR PERSECUCIÓN</button>
+        </div>
+
+        <div id="gameover-screen" class="screen hidden">
+            <h2 style="color: #6F7C12; margin-bottom: 10px;">TE HAS QUEDADO ATRÁS</h2>
+            <p>El barco zarpó y te convertiste en leyenda urbana...</p>
+            <button class="btn" id="retry-btn">INTENTAR DE NUEVO</button>
+        </div>
+
+        <div id="victory-screen" class="screen hidden">
+            <h2 style="color: #8CFF98; margin-bottom: 10px;">¡LO LOGRASTE!</h2>
+            <p>Has alcanzado el barco. Ahora Víctor tendrá que escucharte.</p>
+            <button class="btn" id="win-btn">JUGAR DE NUEVO</button>
+        </div>
+    </div>
+
+    <p class="instructions" style="margin-top: 20px;">Diseñado con la paleta de colores gótica de neón. ¡Comparte el link con tus amigos!</p>
+
+    <script>
+        const monster = document.getElementById('monster');
+        const container = document.getElementById('game-container');
+        const distanceEl = document.getElementById('distance');
+        const highscoreEl = document.getElementById('highscore');
+        
+        // Pantallas y Botones
+        const startScreen = document.getElementById('start-screen');
+        const gameoverScreen = document.getElementById('gameover-screen');
+        const victoryScreen = document.getElementById('victory-screen');
+        const startBtn = document.getElementById('start-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const winBtn = document.getElementById('win-btn');
+
+        // Variables de físicas y juego
+        let isJumping = false;
+        let gravity = 0.6;
+        let position = 0; // Posición vertical del monstruo
+        let velocity = 0;
+        
+        let gameActive = false;
+        let distanceToShip = 100; 
+        let highScore = localStorage.getItem('frankHighScore') || 0;
+        highscoreEl.innerText = highScore;
+
+        let obstacles = [];
+        let spawnTimer = 0;
+        let gameSpeed = 5;
+
+        // Bucle principal del juego
+        function gameLoop() {
+            if (!gameActive) return;
+
+            // 1. Manejo de Gravedad e Inercia del salto
+            if (isJumping || position > 0) {
+                velocity -= gravity;
+                position += velocity;
+                
+                if (position <= 0) {
+                    position = 0;
+                    isJumping = false;
+                    velocity = 0;
+                }
+            }
+            monster.style.bottom = (60 + position) + 'px';
+
+            // 2. Disminuir la distancia al barco de forma progresiva
+            if (distanceToShip > 0) {
+                distanceToShip -= 0.05;
+                distanceEl.innerText = Math.max(0, Math.floor(distanceToShip));
+            } else {
+                endGame(true); // Victoria si llega a 0 metros
+                return;
+            }
+
+            // 3. Generación y movimiento de obstáculos
+            spawnTimer++;
+            if (spawnTimer > Math.random() * 80 + 70) { // Frecuencia orgánica
+                createObstacle();
+                spawnTimer = 0;
+            }
+
+            moveObstacles();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Registrar saltos (Espacio, Flecha Arriba o Clic en pantalla)
+        function triggerJump() {
+            if (!isJumping && gameActive) {
+                isJumping = true;
+                velocity = 12; // Fuerza del salto
+                // Pequeño estiramiento estético al saltar (Game Feel)
+                monster.style.transform = "scaleY(1.15)";
+                setTimeout(() => monster.style.transform = "scaleY(1)", 200);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                triggerJump();
+            }
+        });
+        container.addEventListener('click', triggerJump);
+
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.right = '-30px';
+            // Variar ligeramente la altura del obstáculo para que se vea más dinámico
+            obstacle.style.height = (Math.random() * 20 + 35) + 'px';
+            container.appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        function moveObstacles() {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                let currentRight = parseFloat(obs.style.right);
+                
+                // Mover obstáculo a la izquierda
+                currentRight += gameSpeed;
+                obs.style.right = currentRight + 'px';
+
+                // Obtener posiciones para colisiones (Bounding Boxes)
+                let mRect = monster.getBoundingClientRect();
+                let oRect = obs.getBoundingClientRect();
+
+                // Colisión ajustada (Hitbox ligeramente más pequeña para que sea justo)
+                if (
+                    mRect.left < oRect.right - 5 &&
+                    mRect.right > oRect.left + 5 &&
+                    mRect.bottom > oRect.top + 5
+                ) {
+                    endGame(false); // Game Over
+                    return;
+                }
+
+                // Limpiar obstáculos que salen de pantalla
+                if (currentRight > 850) {
+                    obs.remove();
+                    obstacles.splice(i, 1);
+                }
+            }
+        }
+
+        function startGame() {
+            // Resetear estados
+            distanceToShip = 100;
+            position = 0;
+            isJumping = false;
+            velocity = 0;
+            gameActive = true;
+            
+            // Limpiar obstáculos viejos
+            obstacles.forEach(obs => obs.remove());
+            obstacles = [];
+
+            // Ocultar pantallas de UI
+            startScreen.classList.add('hidden');
+            gameoverScreen.classList.add('hidden');
+            victoryScreen.classList.add('hidden');
+
+            // Arrancar bucle
+            gameLoop();
+        }
+
+        function endGame(isVictory) {
+            gameActive = false;
+            if (isVictory) {
+                victoryScreen.classList.remove('hidden');
+            } else {
+                gameoverScreen.classList.remove('hidden');
+                
+                // Guardar puntuación si se corrió más de lo anterior
+                let scoreAchieved = 100 - Math.floor(distanceToShip);
+                if (scoreAchieved > highScore) {
+                    highScore = scoreAchieved;
+                    localStorage.setItem('frankHighScore', highScore);
+                    highscoreEl.innerText = highScore;
+                }
+            }
+        }
+
+        // Listeners de botones
+        startBtn.addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
+        retryBtn.addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
+        winBtn.addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
+
+    </script>
+</body>
+</html>
