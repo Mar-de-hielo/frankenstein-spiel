@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Frankenstein: das Plädoyer</title>
     <style>
         /* PALETA: #000000, #483519, #6F7C12, #AAD922, #8CFF98 */
@@ -13,6 +13,8 @@
             padding: 0;
             font-family: 'Courier New', Courier, monospace;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation; /* Optimiza el doble toque en móviles */
         }
 
         body {
@@ -24,6 +26,7 @@
             justify-content: center;
             min-height: 100vh;
             overflow: hidden;
+            padding: 10px;
         }
 
         h1 {
@@ -34,6 +37,7 @@
             text-align: center;
         }
 
+        /* --- CONTENEDOR RESPONSIVO (ADAPTADO A MÓVILES) --- */
         #game-container {
             position: relative;
             width: 800px;
@@ -45,10 +49,22 @@
             overflow: hidden;
         }
 
+        /* REGLAS CSS PARA AJUSTAR A PANTALLAS PEQUEÑAS */
+        @media (max-width: 820px) {
+            #game-container {
+                width: 100%;
+                max-width: 480px; /* Modo vertical u horizontal compacto */
+                height: 320px;
+            }
+            h1 { font-size: 1.3rem; }
+            .end-title { font-size: 1.4rem !important; }
+            .end-desc { font-size: 0.85rem !important; max-width: 90% !important; }
+        }
+
         /* --- REDISEÑO ESTÉTICO DEL MONSTRUO --- */
         #monster {
             position: absolute;
-            left: 80px;
+            left: 40px; /* Ajustado un poco más a la izquierda para pantallas chicas */
             bottom: 60px;
             width: 45px;
             height: 70px;
@@ -58,14 +74,15 @@
             z-index: 5;
             transition: transform 0.05s, left 0.5s ease-in-out, bottom 0.5s ease-in-out;
         }
-        /* Cabello */
+        @media (max-width: 820px) {
+            #monster { left: 20px; } /* Más espacio para reaccionar en celular */
+        }
         .m-hair {
             width: 100%;
             height: 12px;
             background-color: #000000;
             border-radius: 4px 4px 0 0;
         }
-        /* Cabeza/Cara */
         .m-head {
             width: 85%;
             height: 20px;
@@ -76,7 +93,6 @@
             justify-content: space-around;
             padding: 0 4px;
         }
-        /* Ojos neón */
         .m-head::before, .m-head::after {
             content: '';
             width: 6px;
@@ -84,7 +100,6 @@
             background-color: #8CFF98;
             box-shadow: 0 0 4px #8CFF98;
         }
-        /* Saco / Cuerpo */
         .m-body {
             width: 100%;
             height: 38px;
@@ -93,7 +108,6 @@
             border-radius: 0 0 4px 4px;
             position: relative;
         }
-        /* Cicatriz del pecho */
         .m-body::after {
             content: '┼';
             position: absolute;
@@ -116,7 +130,9 @@
             z-index: 4;
             transition: right 1s ease-in-out, transform 0.5s ease-in-out;
         }
-        /* Vela */
+        @media (max-width: 820px) {
+            #creator-ship { right: 15px; }
+        }
         #creator-ship::after {
             content: '';
             position: absolute;
@@ -125,9 +141,7 @@
             border-left: 50px solid transparent;
             border-bottom: 60px solid #8CFF98;
             opacity: 0.8;
-            transition: transform 0.5s ease-in-out, border-bottom-color 0.5s;
         }
-        /* Mini Sprite de Víctor en la cubierta */
         .victor-sprite {
             position: absolute;
             top: -25px; left: 15px;
@@ -135,7 +149,6 @@
             background-color: #000000;
             border: 2px solid #8CFF98;
             border-radius: 3px 3px 0 0;
-            transition: transform 0.5s ease-in-out;
         }
 
         /* --- OBSTÁCULOS --- */
@@ -158,13 +171,13 @@
             z-index: 3;
         }
 
-        /* --- SISTEMA DE DIÁLOGO (NARRATIVA) --- */
+        /* --- SISTEMA DE DIÁLOGO --- */
         #dialogue-overlay {
             position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 160px;
+            bottom: 0; left: 0; width: 100%; height: 170px;
             background-color: rgba(0, 0, 0, 0.95);
             border-top: 4px solid #AAD922;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -174,95 +187,72 @@
             font-weight: bold;
             color: #AAD922;
             margin-bottom: 5px;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
         .dialogue-text {
             color: #8CFF98;
-            font-size: 1rem;
+            font-size: 0.9rem;
             line-height: 1.3;
         }
         .options-container {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
         }
         .opt-btn {
             background-color: #483519;
             color: #8CFF98;
             border: 1px solid #6F7C12;
-            padding: 6px 12px;
+            padding: 8px 12px; /* Botones ligeramente más grandes para dedos en móvil */
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         .opt-btn:hover {
             background-color: #6F7C12;
             color: #000000;
         }
 
-        /* EFECTO TORMENTA AL FINAL */
-        .storm-flash {
-            animation: flash 0.5s ease-out infinite alternate;
-        }
+        /* EFECTOS Y ANIMACIONES */
+        .storm-flash { animation: flash 0.5s ease-out infinite alternate; }
         @keyframes flash {
             0%, 90% { background: linear-gradient(to bottom, #000000 60%, #483519 100%); }
             95% { background: #6F7C12; }
         }
 
-        /* ANIMACIONES DE FINALES PERSONALIZADOS */
-        .shake-screen {
-            animation: screenShake 0.15s infinite alternate;
-        }
+        .shake-screen { animation: screenShake 0.15s infinite alternate; }
         @keyframes screenShake {
             0% { transform: translate(2px, 1px) rotate(0deg); }
             100% { transform: translate(-1px, -2px) rotate(1deg); }
         }
 
-        /* INTERFAZ COMÚN */
-        .ui-text { position: absolute; top: 15px; font-size: 1.1rem; font-weight: bold; z-index: 2; }
-        #distance-ui { left: 20px; }
-        #high-ui { right: 20px; }
+        /* INTERFAZ */
+        .ui-text { position: absolute; top: 15px; font-size: 0.9rem; font-weight: bold; z-index: 2; }
+        #distance-ui { left: 15px; }
+        #high-ui { right: 15px; }
 
         .screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.95);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 30;
+            padding: 20px;
         }
 
-        /* Variaciones estéticas de pantallas finales */
-        .screen-venganza {
-            background: radial-gradient(circle, #483519 0%, #000000 100%);
-            border: 4px dashed #6F7C12;
-        }
-        .screen-triste {
-            background: linear-gradient(to top, #000000, #483519);
-        }
-        .screen-pacto {
-            background: radial-gradient(circle, #102008 0%, #000000 100%);
-            border: 4px solid #8CFF98;
-        }
+        .screen-venganza { background: radial-gradient(circle, #483519 0%, #000000 100%); border: 4px dashed #6F7C12; }
+        .screen-triste { background: linear-gradient(to top, #000000, #483519); }
+        .screen-pacto { background: radial-gradient(circle, #102008 0%, #000000 100%); border: 4px solid #8CFF98; }
 
         .btn {
             background-color: #AAD922; color: #000000; border: none;
-            padding: 12px 30px; font-size: 1.1rem; font-weight: bold;
-            cursor: pointer; margin-top: 20px; border-radius: 4px;
+            padding: 12px 25px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; margin-top: 15px; border-radius: 4px;
             box-shadow: 0 4px 0 #6F7C12;
         }
         .btn:hover { background-color: #8CFF98; }
 
-        .end-title {
-            font-size: 2rem;
-            margin-bottom: 15px;
-            text-shadow: 0 0 10px currentColor;
-            text-align: center;
-        }
-
-        .end-desc {
-            text-align: center;
-            max-width: 75%;
-            line-height: 1.5;
-            color: #8CFF98;
-        }
+        .end-title { font-size: 1.6rem; margin-bottom: 10px; text-shadow: 0 0 10px currentColor; text-align: center; }
+        .end-desc { text-align: center; max-width: 85%; line-height: 1.4; color: #8CFF98; font-size: 0.9rem; }
 
         .hidden { display: none !important; }
         @keyframes floatShip {
@@ -279,21 +269,18 @@
         <div id="distance-ui" class="ui-text">DISTANZ: <span id="distance">100</span>m</div>
         <div id="high-ui" class="ui-text">AUFZEICHNEN: <span id="highscore">0</span>m</div>
 
-        <!-- Monstruo Rediseñado -->
         <div id="monster">
             <div class="m-hair"></div>
             <div class="m-head"></div>
             <div class="m-body"></div>
         </div>
 
-        <!-- Barco con Víctor encima -->
         <div id="creator-ship">
             <div class="victor-sprite"></div>
         </div>
         
         <div id="floor"></div>
 
-        <!-- Caja de Diálogo Cinematográfica -->
         <div id="dialogue-overlay" class="hidden">
             <div>
                 <div class="speaker-name" id="speaker">VIKTOR FRANKENSTEIN</div>
@@ -302,38 +289,33 @@
             <div class="options-container" id="options-box"></div>
         </div>
 
-        <!-- Pantalla de Inicio -->
         <div id="start-screen" class="screen">
-            <h2 style="color: #8CFF98; margin-bottom: 10px;">FOLGE DEINEM SCHÖPFER</h2>
-            <p style="text-align:center; max-width:80%">Viktor flieht in den Arktischen Ozean. Hol ihn ein und fordern Sie Antworten.</p>
+            <h2 style="color: #8CFF98; margin-bottom: 10px; text-align: center; font-size: 1.4rem;">FOLGE DEINEM SCHÖPFER</h2>
+            <p style="text-align:center; max-width:90%; font-size: 0.85rem;">Viktor flieht in den Arktischen Ozean. Hol ihn ein und fordern Sie Antworten.</p>
             <button class="btn" id="start-btn">LAUF ZUM HAFEN</button>
         </div>
 
-        <!-- Pantalla de Game Over estándar (Muerte por obstáculos) -->
         <div id="gameover-screen" class="screen hidden">
             <h2 style="color: #6F7C12; margin-bottom: 10px;">IM NEBEL VERLOREN</h2>
-            <p>Du konntest deinen Schöpfer nicht rechtzeitig erreichen...</p>
+            <p style="font-size: 0.9rem;">Du konntest deinen Schöpfer nicht erreichen...</p>
             <button class="btn" id="retry-btn">VERSUCHEN SIE ES NOCH EINMAL</button>
         </div>
 
-        <!-- PANTALLA FINAL: RAKRA / RACHE (Venganza) -->
         <div id="end-screen-venganza" class="screen screen-venganza hidden">
             <h2 class="end-title" style="color: #6F7C12;">ENDE: EWIGE RACHE</h2>
-            <p class="end-desc">Das Schiff versinkt im unerbittlichen arktischen Sturm. Viktor und die Kreatur gehen gemeinsam unter, gefangen im endlosen Schlund des Hasses. Niemand hat überlebt.</p>
+            <p class="end-desc">Das Schiff versinkt im unerbittlichen arktischen Sturm. Viktor und die Kreatur gehen gemeinsam unter, gefangen im endlosen Schlund des Hasses.</p>
             <button class="btn restart-btn">NEU STARTEN</button>
         </div>
 
-        <!-- PANTALLA FINAL: TRISTE / EINSAMKEIT (Triste) -->
         <div id="end-screen-triste" class="screen screen-triste hidden">
             <h2 class="end-title" style="color: #AAD922;">ENDE: DIE EINSAMKEIT</h2>
-            <p class="end-desc">Viktor bricht innerlich zusammen und fällt auf die Knie. Die Kreatur wendet sich ab und wandert einsam in den eisigen Norden, um nie wieder gesehen zu werden.</p>
+            <p class="end-desc">Viktor bricht innerlich zusammen. Die Kreatur wendet sich ab und wandert einsam in den eisigen Norden, um nie wieder gesehen zu werden.</p>
             <button class="btn restart-btn">NEU STARTEN</button>
         </div>
 
-        <!-- PANTALLA FINAL: PAKT / DER DUNKLER PAKT (Pacto) -->
         <div id="end-screen-pacto" class="screen screen-pacto hidden">
             <h2 class="end-title" style="color: #8CFF98;">ENDE: DER DUNKLER PAKT</h2>
-            <p class="end-desc">Ein düsterer Kompromiss wurde geschlossen. Viktor kehrt in sein Labor zurück, um sein Versprechen zu erfüllen. Die Kreatur wartet geduldig in der Dunkelheit.</p>
+            <p class="end-desc">Ein düsterer Kompromiss wurde geschlossen. Viktor kehrt in sein Labor zurück. Die Kreatur wartet geduldig in der Dunkelheit.</p>
             <button class="btn restart-btn">NEU STARTEN</button>
         </div>
     </div>
@@ -365,7 +347,6 @@
         let spawnTimer = 0;
         let gameSpeed = 5.5;
 
-        // --- ARBOL DE DIÁLOGOS NARRATIVOS ---
         const dialogueTree = {
             inicio: {
                 speaker: "VIKTOR FRANKENSTEIN",
@@ -405,16 +386,8 @@
                     { text: "[Das Schiff fährt in den ewigen Sturm...] Ende.", next: "showVenganzaEnd" }
                 ]
             },
-            finalTriste: { 
-                speaker: "SYSTEM", 
-                text: "Viktor fällt auf die Knie. Das Monster geht nach Norden. Es ist allein für immer.", 
-                options: [{ text: "Weiter", next: "showTristeEnd" }] 
-            },
-            finalPacto: { 
-                speaker: "SYSTEM", 
-                text: "Ein dunkler Pakt ist geschlossen. Viktor geht zurück in sein Labor. Die Kreatur wartet geduldig in den Schatten.", 
-                options: [{ text: "Weiter", next: "showPactoEnd" }] 
-            },
+            finalTriste: { speaker: "SYSTEM", text: "Viktor fällt auf die Knie. Das Monster geht nach Norden. Es ist allein für immer.", options: [{ text: "Weiter", next: "showTristeEnd" }] },
+            finalPacto: { speaker: "SYSTEM", text: "Ein dunkler Pakt ist geschlossen. Viktor geht zurück in sein Labor. Die Kreatur wartet geduldig in den Schatten.", options: [{ text: "Weiter", next: "showPactoEnd" }] },
         };
 
         function gameLoop() {
@@ -428,7 +401,7 @@
             monster.style.bottom = (60 + position) + 'px';
 
             if (distanceToShip > 0) {
-                distanceToShip -= 0.08;
+                distanceToShip -= 0.09; // Ligeramente ajustado para ritmo móvil
                 distanceEl.innerText = Math.max(0, Math.floor(distanceToShip));
             } else {
                 startCinematic();
@@ -453,8 +426,25 @@
             }
         }
 
-        document.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') triggerJump(); });
-        container.addEventListener('click', triggerJump);
+        // --- ENTRADAS COMPATIBLES (TECLADO + PANTALLA TÁCTIL) ---
+        document.addEventListener('keydown', (e) => { 
+            if (e.code === 'Space' || e.code === 'ArrowUp') triggerJump(); 
+        });
+        
+        // touchstart es instantáneo en teléfonos, eliminando lag de clics comunes
+        container.addEventListener('touchstart', (e) => {
+            // Evitamos que salte si se presionó un botón de la interfaz o del diálogo
+            if (e.target.tagName !== 'BUTTON') {
+                e.preventDefault(); 
+                triggerJump();
+            }
+        }, { passive: false });
+
+        container.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                triggerJump();
+            }
+        });
 
         function createObstacle() {
             const obs = document.createElement('div');
@@ -466,6 +456,7 @@
         }
 
         function moveObstacles() {
+            let containerWidth = container.offsetWidth;
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 let obs = obstacles[i];
                 let currentRight = parseFloat(obs.style.right) + gameSpeed;
@@ -478,7 +469,7 @@
                     gameOver();
                     return;
                 }
-                if (currentRight > 850) { obs.remove(); obstacles.splice(i, 1); }
+                if (currentRight > containerWidth + 50) { obs.remove(); obstacles.splice(i, 1); }
             }
         }
 
@@ -486,10 +477,12 @@
             gameActive = false;
             obstacles.forEach(o => o.remove());
             
-            monster.style.left = "620px";
-            monster.style.bottom = "130px";
-            ship.style.animation = "floatShip 1s ease-in-out infinite alternate";
+            // Posicionamiento adaptivo en la cinemática final
+            let isMobile = window.innerWidth <= 820;
+            monster.style.left = isMobile ? "70%" : "620px";
+            monster.style.bottom = isMobile ? "110px" : "130px";
             
+            ship.style.animation = "floatShip 1s ease-in-out infinite alternate";
             container.classList.add('storm-flash');
 
             setTimeout(() => {
@@ -499,19 +492,9 @@
         }
 
         function showDialogue(nodeKey) {
-            // Interceptar llaves especiales de transiciones de fin de juego animadas
-            if (nodeKey === "showVenganzaEnd") {
-                triggerVenganzaAnimation();
-                return;
-            }
-            if (nodeKey === "showTristeEnd") {
-                triggerTristeAnimation();
-                return;
-            }
-            if (nodeKey === "showPactoEnd") {
-                triggerPactoAnimation();
-                return;
-            }
+            if (nodeKey === "showVenganzaEnd") { triggerVenganzaAnimation(); return; }
+            if (nodeKey === "showTristeEnd") { triggerTristeAnimation(); return; }
+            if (nodeKey === "showPactoEnd") { triggerPactoAnimation(); return; }
 
             const node = dialogueTree[nodeKey];
             speakerEl.innerText = node.speaker;
@@ -522,24 +505,25 @@
                 const btn = document.createElement('button');
                 btn.classList.add('opt-btn');
                 btn.innerText = opt.text;
-                btn.addEventListener('click', (e) => {
+                
+                // Soporte híbrido touch/click para los botones de opción
+                const selectOption = (e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     showDialogue(opt.next);
-                });
+                };
+                btn.addEventListener('touchstart', selectOption);
+                btn.addEventListener('click', selectOption);
+                
                 optionsBox.appendChild(btn);
             });
         }
 
-        // --- ANIMACIONES NARRATIVAS DE FIN DE JUEGO ---
-        
         function triggerVenganzaAnimation() {
             dialogueOverlay.classList.add('hidden');
-            container.classList.add('shake-screen'); // Tiembla la pantalla dramáticamente
-            
-            // Animación física de destrucción
+            container.classList.add('shake-screen');
             ship.style.transform = "rotate(25deg) translateY(60px)"; 
             monster.style.bottom = "30px";
-            
             setTimeout(() => {
                 container.classList.remove('shake-screen');
                 document.getElementById('end-screen-venganza').classList.remove('hidden');
@@ -548,32 +532,29 @@
 
         function triggerTristeAnimation() {
             dialogueOverlay.classList.add('hidden');
-            
-            // Animación de separación: El monstruo camina hacia el infinito izquierdo solo
             const victor = document.querySelector('.victor-sprite');
-            if (victor) victor.style.transform = "scaleY(0.5) translateY(10px)"; // Se arrodilla
-            
-            setTimeout(() => {
-                monster.style.left = "-100px"; // El monstruo se va de la pantalla
-            }, 300);
-
-            setTimeout(() => {
-                document.getElementById('end-screen-triste').classList.remove('hidden');
-            }, 2500);
+            if (victor) victor.style.transform = "scaleY(0.5) translateY(10px)";
+            setTimeout(() => { monster.style.left = "-100px"; }, 300);
+            setTimeout(() => { document.getElementById('end-screen-triste').classList.remove('hidden'); }, 2500);
         }
+
+        document.querySelectorAll('.restart-btn').forEach(btn => {
+            const action = (e) => { e.stopPropagation(); e.preventDefault(); startGame(); };
+            btn.addEventListener('touchstart', action);
+            btn.addEventListener('click', action);
+        });
 
         function triggerPactoAnimation() {
             dialogueOverlay.classList.add('hidden');
-            // Desvanecimiento misterioso directo al menú del pacto
-            setTimeout(() => {
-                document.getElementById('end-screen-pacto').classList.remove('hidden');
-            }, 1000);
+            setTimeout(() => { document.getElementById('end-screen-pacto').classList.remove('hidden'); }, 1000);
         }
 
         function startGame() {
             distanceToShip = 100;
             position = 0; isJumping = false; velocity = 0;
-            monster.style.left = "80px";
+            
+            let isMobile = window.innerWidth <= 820;
+            monster.style.left = isMobile ? "20px" : "80px";
             monster.style.bottom = "60px";
             ship.style.transform = "none";
             const victor = document.querySelector('.victor-sprite');
@@ -584,7 +565,6 @@
             obstacles.forEach(obs => obs.remove());
             obstacles = [];
             
-            // Ocultar todas las pantallas posibles
             startScreen.classList.add('hidden');
             gameoverScreen.classList.add('hidden');
             dialogueOverlay.classList.add('hidden');
@@ -606,16 +586,14 @@
             }
         }
 
-        // Event listeners comunes
-        document.getElementById('start-btn').addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
-        document.getElementById('retry-btn').addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
-        
-        document.querySelectorAll('.restart-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                startGame();
-            });
-        });
+        // Setup inicial de botones principales
+        const bindBtn = (id, action) => {
+            const el = document.getElementById(id);
+            el.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); action(); });
+            el.addEventListener('click', (e) => { e.stopPropagation(); action(); });
+        };
+        bindBtn('start-btn', startGame);
+        bindBtn('retry-btn', startGame);
     </script>
 </body>
 </html>
