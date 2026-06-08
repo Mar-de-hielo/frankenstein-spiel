@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Frankenstein: das Plädoyer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; user-select: none; -webkit-user-select: none; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; touch-action: manipulation; }
+h1 { color: #AAD922; margin: 8px 0 6px; text-shadow: 0 0 10px #6F7C12; font-size: clamp(0.95rem, 4vw, 1.4rem); text-align: center; width: 100%; padding: 0 8px; letter-spacing: 1px; }
+#viewport-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; flex: 1; }
+#game-container {
+  position: relative;
+  width: 800px; height: 400px;
+  background: linear-gradient(to bottom, #000000 60%, #483519 100%);
+  border: 3px solid #6F7C12;
+  border-radius: 8px;
+  overflow: hidden;
+  transform-origin: top center;
+}
+#monster { position: absolute; left: 80px; bottom: 60px; width: 45px; height: 70px; display: flex; flex-direction: column; align-items: center; z-index: 5; transition: transform 0.05s, left 0.5s ease-in-out, bottom 0.1s linear; }
+.m-hair { width: 100%; height: 12px; background-color: #000000; border-radius: 4px 4px 0 0; }
+.m-head { width: 85%; height: 20px; background-color: #AAD922; position: relative; display: flex; align-items: center; justify-content: space-around; padding: 0 4px; }
+.m-head::before, .m-head::after { content: ''; width: 6px; height: 6px; background-color: #8CFF98; box-shadow: 0 0 4px #8CFF98; }
+.m-body { width: 100%; height: 38px; background-color: #483519; border-top: 4px solid #6F7C12; border-radius: 0 0 4px 4px; position: relative; }
+.m-body::after { content: '┼'; position: absolute; top: 5px; left: 15px; color: #AAD922; font-size: 12px; }
+#creator-ship { position: absolute; right: 40px; bottom: 80px; width: 110px; height: 55px; background-color: #483519; border-top: 6px solid #6F7C12; border-radius: 0 0 20px 20px; animation: floatShip 3s ease-in-out infinite; z-index: 4; transition: right 1s ease-in-out, bottom 0.5s ease-in-out; }
+#creator-ship::after { content: ''; position: absolute; bottom: 55px; left: 35px; width: 0; height: 0; border-left: 50px solid transparent; border-bottom: 60px solid #8CFF98; opacity: 0.8; }
+.victor-sprite { position: absolute; top: -25px; left: 15px; width: 15px; height: 25px; background-color: #000000; border: 2px solid #8CFF98; border-radius: 3px 3px 0 0; }
+.obstacle { position: absolute; bottom: 60px; width: 28px; background-color: #6F7C12; border: 3px solid #000000; box-shadow: inset 0 0 10px #483519; border-radius: 3px; }
+#floor { position: absolute; bottom: 0; width: 100%; height: 60px; background-color: #483519; border-top: 6px solid #6F7C12; z-index: 3; }
+
+#dialogue-overlay {
+  position: absolute;
+  bottom: 0; left: 0; width: 100%;
+  background-color: rgba(0,0,0,0.97);
+  border-top: 3px solid #AAD922;
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 20;
+}
+.speaker-name { font-weight: bold; color: #AAD922; font-size: clamp(0.75rem, 2.5vw, 1rem); letter-spacing: 1px; }
+.dialogue-text { color: #8CFF98; font-size: clamp(0.7rem, 2.2vw, 0.9rem); line-height: 1.45; }
+.options-container { display: flex; flex-direction: column; gap: 7px; }
+.opt-btn {
+  background-color: #483519; color: #8CFF98;
+  border: 2px solid #6F7C12;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: clamp(0.65rem, 2vw, 0.82rem);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  border-radius: 4px;
+  text-align: left;
+  line-height: 1.3;
+  transition: all 0.15s;
+  width: 100%;
+}
+.opt-btn:hover, .opt-btn:active { background-color: #6F7C12; color: #000; }
+
+.storm-flash { animation: flash 0.5s ease-out infinite alternate; }
+@keyframes flash { 0%, 90% { background: linear-gradient(to bottom, #000000 60%, #483519 100%); } 95% { background: #6F7C12; } }
+
+.ui-text { position: absolute; top: 12px; font-size: clamp(0.65rem, 2vw, 1rem); font-weight: bold; z-index: 2; letter-spacing: 1px; color: #8CFF98; }
+#distance-ui { left: 16px; }
+#high-ui { right: 16px; }
+
+.screen {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.93);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 10; padding: 20px;
+}
+.screen h2 { font-size: clamp(0.9rem, 3vw, 1.3rem); margin-bottom: 12px; letter-spacing: 1px; }
+.screen p { text-align: center; max-width: 90%; line-height: 1.5; font-size: clamp(0.7rem, 2.2vw, 0.9rem); color: #8CFF98; }
+.btn {
+  background-color: #AAD922; color: #000;
+  border: none; padding: 12px 28px;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  cursor: pointer; margin-top: 18px; border-radius: 4px;
+  box-shadow: 0 4px 0 #6F7C12;
+  transition: background 0.2s;
+}
+.btn:hover, .btn:active { background-color: #8CFF98; }
+.hidden { display: none !important; }
+@keyframes floatShip { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(-2deg); } }
+</style>
+</head>
+<body>
+
+<h1>FRANKENSTEIN: DAS PLÄDOYER</h1>
+<div id="viewport-wrapper">
+  <div id="game-container">
+    <div id="distance-ui" class="ui-text">DISTANZ: <span id="distance">100</span>m</div>
+    <div id="high-ui" class="ui-text">REKORD: <span id="highscore">0</span>m</div>
+    <div id="monster"><div class="m-hair"></div><div class="m-head"></div><div class="m-body"></div></div>
+    <div id="creator-ship"><div class="victor-sprite"></div></div>
+    <div id="floor"></div>
+    <div id="dialogue-overlay" class="hidden">
+      <div>
+        <div class="speaker-name" id="speaker">VIKTOR FRANKENSTEIN</div>
+        <div class="dialogue-text" id="dialogue-box">...</div>
+      </div>
+      <div class="options-container" id="options-box"></div>
+    </div>
+    <div id="start-screen" class="screen">
+      <h2 style="color:#8CFF98;">FOLGE DEINEM SCHÖPFER</h2>
+      <p>Viktor flieht in den Arktischen Ozean. Holen Sie ihn ein und fordern Sie Ihre Antworten ein.</p>
+      <button class="btn" id="start-btn">ZUM HAFEN LAUFEN</button>
+    </div>
+    <div id="gameover-screen" class="screen hidden">
+      <h2 style="color:#6F7C12;">IM NEBEL VERLOREN</h2>
+      <p style="margin-bottom:6px;">Ihr Schöpfer ist entkommen...</p>
+      <button class="btn" id="retry-btn">ERNEUT VERSUCHEN</button>
+    </div>
+    <div id="ending-screen" class="screen hidden">
+      <h2 id="ending-title" style="color:#AAD922; text-shadow:0 0 10px #6F7C12;">DAS ENDE</h2>
+      <p id="ending-text" style="color:#8CFF98;">...</p>
+      <button class="btn" id="main-menu-btn">ZUM HAUPTMENÜ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const monster = document.getElementById('monster');
+const ship = document.getElementById('creator-ship');
+const container = document.getElementById('game-container');
+const wrapper = document.getElementById('viewport-wrapper');
+const distanceEl = document.getElementById('distance');
+const highscoreEl = document.getElementById('highscore');
+const startScreen = document.getElementById('start-screen');
+const gameoverScreen = document.getElementById('gameover-screen');
+const endingScreen = document.getElementById('ending-screen');
+const endingTextEl = document.getElementById('ending-text');
+const dialogueOverlay = document.getElementById('dialogue-overlay');
+const speakerEl = document.getElementById('speaker');
+const dialogueBox = document.getElementById('dialogue-box');
+const optionsBox = document.getElementById('options-box');
+
+let isJumping = false, gravity = 0.6, position = 0, velocity = 0, gameActive = false;
+let distanceToShip = 100, highScore = 0, obstacles = [], spawnTimer = 0, gameSpeed = 5.5;
+
+function resizeGame() {
+  const w = wrapper.clientWidth || window.innerWidth;
+  const h = wrapper.clientHeight || (window.innerHeight - 60);
+  let scale = Math.min(w / 800, h / 400);
+  if (scale > 1.1) scale = 1.1;
+  container.style.transform = 'scale(' + scale + ')';
+  container.style.marginTop = ((h - 400 * scale) / 2) + 'px';
+}
+window.addEventListener('resize', resizeGame);
+window.addEventListener('load', resizeGame);
+setTimeout(resizeGame, 100);
+
+const dialogueTree = {
+  inicio: { speaker: "VIKTOR FRANKENSTEIN", text: "Nein!!! Wie bist du hierher gekommen? Du bist ein Dämon, eine lebende Abscheulichkeit!", options: [{ text: "Warum hast du mich erschaffen, wenn du mich nicht wolltest?", next: "reclamo" }, { text: "[Die Kreatur brüllt laut und bricht den Mast]", next: "furia" }] },
+  reclamo: { speaker: "VIKTOR FRANKENSTEIN", text: "Ich war blind. Ich wollte den Tod besiegen. Aber dann habe ich deine Augen gesehen... Das war der wahre Horror. Du hast keine Seele.", options: [{ text: "Ich habe Gefühle. Du hast mich so gemacht. Gib mir eine Gefährtin!", next: "pacto" }, { text: "Wenn ich keine Seele habe, dann weil du sie mir verwehrt hast. Du wirst bezahlen!", next: "venganza" }] },
+  furia: { speaker: "VIKTOR FRANKENSTEIN", text: "Du gefühlloses Monster! Deine Taten beweisen es: Du bist eine Gefahr für die gesamte Menschheit! Du wirst niemals Mitleid von mir erlangen!", options: [{ text: "Ich wollte nur deine Akzeptanz... Jetzt ist hier nur noch Eis übrig.", next: "finalTriste" }] },
+  pacto: { speaker: "VIKTOR FRANKENSTEIN", text: "Verdammt sei dein Flehen... Wenn ich ein zweites Wesen wie dich erschaffe, wirst du dann für immer verschwinden? Ans Ende der Welt ziehen?", options: [{ text: "Das verspreche ich. Du wirst nie wieder von uns hören.", next: "finalPacto" }, { text: "Ich glaube deinen Versprechen nicht mehr. Deine Strafe beginnt heute.", next: "venganza" }] },
+  venganza: { speaker: "VIKTOR FRANKENSTEIN", text: "Dann soll dieses Eismeer unser aller Grab sein! Ich habe keine Angst mehr vor dir!", options: [{ text: "[Das Schiff versinkt im ewigen arktischen Sturm...]", next: "end_venganza" }] },
+  finalTriste: { speaker: "SYSTEM", text: "Viktor fällt entkräftet auf die Knie. Die Kreatur wendet sich ab und wandert einsam in die unendliche Schwärze des Nordens.", options: [{ text: "Schicksal akzeptieren", next: "end_triste" }] },
+  finalPacto: { speaker: "SYSTEM", text: "Ein düsterer Pakt ist besiegelt. Viktor kehrt in sein Labor zurück. Die Kreatur zieht sich geduldig in die Schatten zurück und wartet...", options: [{ text: "Schicksal akzeptieren", next: "end_pacto" }] }
+};
+
+const endings = {
+  end_venganza: "Das Eismeer wurde euer ewiges Grab. Schöpfer und Geschöpf, vereint in der Kälte des Todes. Es gibt keine Gewinner in dieser Tragödie.",
+  end_triste: "Viktor stirbt einsam im Eis. Du lebst weiter – unsterblich, missverstanden und für immer allein am Ende der Welt.",
+  end_pacto: "Du hast ein Versprechen erhalten, aber zu welchem Preis? Ein neues Wesen wird entstehen. Der Kreislauf aus Wissenschaft und Horror bricht nicht ab."
+};
+
+function gameLoop() {
+  if (!gameActive) return;
+  if (isJumping || position > 0) {
+    velocity -= gravity;
+    position += velocity;
+    if (position <= 0) { position = 0; isJumping = false; velocity = 0; }
+  }
+  monster.style.bottom = (60 + position) + 'px';
+  if (distanceToShip > 0) {
+    distanceToShip -= 0.08;
+    distanceEl.innerText = Math.max(0, Math.floor(distanceToShip));
+  } else { startCinematic(); return; }
+  spawnTimer++;
+  if (spawnTimer > Math.random() * 70 + 60) { createObstacle(); spawnTimer = 0; }
+  moveObstacles();
+  requestAnimationFrame(gameLoop);
+}
+
+function triggerJump() {
+  if (!isJumping && gameActive) {
+    isJumping = true; velocity = 12.5;
+    monster.style.transform = "scaleY(1.15) scaleX(0.9)";
+    setTimeout(() => monster.style.transform = "scaleY(1) scaleX(1)", 150);
+  }
+}
+
+document.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') triggerJump(); });
+container.addEventListener('touchstart', (e) => {
+  if (!e.target.classList.contains('opt-btn') && !e.target.classList.contains('btn')) { e.preventDefault(); triggerJump(); }
+}, { passive: false });
+container.addEventListener('click', (e) => { if (!e.target.classList.contains('opt-btn') && !e.target.classList.contains('btn')) triggerJump(); });
+
+function createObstacle() {
+  const obs = document.createElement('div');
+  obs.classList.add('obstacle');
+  obs.style.right = '-35px';
+  obs.style.height = (Math.random() * 20 + 35) + 'px';
+  container.appendChild(obs);
+  obstacles.push(obs);
+}
+
+function moveObstacles() {
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    let obs = obstacles[i];
+    let cr = parseFloat(obs.style.right) + gameSpeed;
+    obs.style.right = cr + 'px';
+    let mR = monster.getBoundingClientRect(), oR = obs.getBoundingClientRect();
+    if (mR.left < oR.right - 6 && mR.right > oR.left + 6 && mR.bottom > oR.top + 4) { gameOver(); return; }
+    if (cr > 850) { obs.remove(); obstacles.splice(i, 1); }
+  }
+}
+
+function startCinematic() {
+  gameActive = false;
+  obstacles.forEach(o => o.remove()); obstacles = [];
+  monster.style.left = "620px"; monster.style.bottom = "130px";
+  ship.style.right = "80px"; ship.style.bottom = "60px";
+  ship.style.animation = "floatShip 1s ease-in-out infinite alternate";
+  container.classList.add('storm-flash');
+  setTimeout(() => { dialogueOverlay.classList.remove('hidden'); showDialogue("inicio"); }, 1000);
+}
+
+function showDialogue(nodeKey) {
+  if (endings[nodeKey]) { showEndingScreen(endings[nodeKey]); return; }
+  const node = dialogueTree[nodeKey];
+  speakerEl.innerText = node.speaker;
+  dialogueBox.innerText = node.text;
+  optionsBox.innerHTML = "";
+  node.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.classList.add('opt-btn');
+    btn.innerText = opt.text;
+    const handle = (e) => { e.stopPropagation(); e.preventDefault(); showDialogue(opt.next); };
+    btn.addEventListener('touchstart', handle, { once: true });
+    btn.addEventListener('click', handle);
+    optionsBox.appendChild(btn);
+  });
+}
+
+function showEndingScreen(text) {
+  dialogueOverlay.classList.add('hidden');
+  endingTextEl.innerText = text;
+  endingScreen.classList.remove('hidden');
+}
+
+function startGame() {
+  distanceToShip = 100; position = 0; isJumping = false; velocity = 0;
+  monster.style.left = "80px"; monster.style.bottom = "60px";
+  ship.style.right = "40px"; ship.style.bottom = "80px";
+  ship.style.animation = "floatShip 3s ease-in-out infinite";
+  container.classList.remove('storm-flash');
+  gameActive = true;
+  obstacles.forEach(obs => obs.remove()); obstacles = [];
+  startScreen.classList.add('hidden'); gameoverScreen.classList.add('hidden');
+  endingScreen.classList.add('hidden'); dialogueOverlay.classList.add('hidden');
+  gameLoop();
+}
+
+function gameOver() {
+  gameActive = false;
+  gameoverScreen.classList.remove('hidden');
+  let score = 100 - Math.floor(distanceToShip);
+  if (score > highScore) { highScore = score; highscoreEl.innerText = highScore; }
+}
+
+const bindButton = (id, action) => {
+  const el = document.getElementById(id);
+  el.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); action(); }, { passive: false });
+  el.addEventListener('click', (e) => { e.stopPropagation(); action(); });
+};
+
+bindButton('start-btn', startGame);
+bindButton('retry-btn', startGame);
+bindButton('main-menu-btn', () => { endingScreen.classList.add('hidden'); startScreen.classList.remove('hidden'); });
+resizeGame();
+</script>
+</body>
+</html>
