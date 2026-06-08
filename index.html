@@ -5,297 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Frankenstein: das Plädoyer</title>
     <style>
-        /* PALETTE: #000000, #483519, #6F7C12, #AAD922, #8CFF98 */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; user-select: none; -webkit-user-select: none; }
+        body { background-color: #000000; color: #8CFF98; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; touch-action: manipulation; }
+        h1 { color: #AAD922; margin-bottom: 10px; text-shadow: 0 0 10px #6F7C12; font-size: 1.5rem; text-align: center; width: 100%; padding: 0 10px; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', Courier, monospace;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+        #viewport-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; height: auto; }
+        
+        #game-container { position: relative; width: 800px; height: 400px; background: linear-gradient(to bottom, #000000 60%, #483519 100%); border: 4px solid #6F7C12; border-radius: 8px; box-shadow: 0 0 25px rgba(140, 255, 152, 0.2); overflow: hidden; transform-origin: center center; }
 
-        body {
-            background-color: #000000;
-            color: #8CFF98;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-            touch-action: manipulation;
-        }
+        /* --- MONSTRUO Y SHIP --- */
+        #monster { position: absolute; left: 80px; bottom: 60px; width: 45px; height: 70px; display: flex; flex-direction: column; align-items: center; z-index: 5; transition: transform 0.05s, left 0.5s ease-in-out, bottom 0.1s linear; }
+        .m-hair { width: 100%; height: 12px; background-color: #000000; border-radius: 4px 4px 0 0; }
+        .m-head { width: 85%; height: 20px; background-color: #AAD922; position: relative; display: flex; align-items: center; justify-content: space-around; padding: 0 4px; }
+        .m-head::before, .m-head::after { content: ''; width: 6px; height: 6px; background-color: #8CFF98; box-shadow: 0 0 4px #8CFF98; }
+        .m-body { width: 100%; height: 38px; background-color: #483519; border-top: 4px solid #6F7C12; border-radius: 0 0 4px 4px; position: relative; }
+        .m-body::after { content: '┼'; position: absolute; top: 5px; left: 15px; color: #AAD922; font-size: 12px; }
 
-        h1 {
-            color: #AAD922;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px #6F7C12;
-            font-size: 1.6rem;
-            text-align: center;
-            width: 100%;
-            padding: 0 10px;
-        }
+        #creator-ship { position: absolute; right: 40px; bottom: 80px; width: 110px; height: 55px; background-color: #483519; border-top: 6px solid #6F7C12; border-radius: 0 0 20px 20px; animation: floatShip 3s ease-in-out infinite; z-index: 4; }
+        #creator-ship::after { content: ''; position: absolute; bottom: 55px; left: 35px; width: 0; height: 0; border-left: 50px solid transparent; border-bottom: 60px solid #8CFF98; opacity: 0.8; }
+        .victor-sprite { position: absolute; top: -25px; left: 15px; width: 15px; height: 25px; background-color: #000000; border: 2px solid #8CFF98; border-radius: 3px 3px 0 0; }
 
-        /* Contenedor Adaptativo para Móviles */
-        #viewport-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 100vw;
-            height: auto;
-        }
+        .obstacle { position: absolute; bottom: 60px; width: 28px; height: 45px; background-color: #6F7C12; border: 3px solid #000000; border-radius: 3px; }
+        #floor { position: absolute; bottom: 0; width: 100%; height: 60px; background-color: #483519; border-top: 6px solid #6F7C12; z-index: 3; }
 
-        #game-container {
-            position: relative;
-            width: 800px;
-            height: 400px;
-            background: linear-gradient(to bottom, #000000 60%, #483519 100%);
-            border: 4px solid #6F7C12;
-            border-radius: 8px;
-            box-shadow: 0 0 25px rgba(140, 255, 152, 0.2);
-            overflow: hidden;
-            transform-origin: center center;
-        }
+        /* --- DIALOGOS CORREGIDOS PARA MÓVIL --- */
+        #dialogue-overlay { position: absolute; bottom: 0; left: 0; width: 100%; height: 180px; background-color: rgba(0, 0, 0, 0.95); border-top: 4px solid #AAD922; padding: 15px; display: flex; flex-direction: column; z-index: 20; }
+        .speaker-name { font-weight: bold; color: #AAD922; margin-bottom: 5px; font-size: 1rem; }
+        .dialogue-text { color: #8CFF98; font-size: 0.9rem; line-height: 1.3; overflow-wrap: break-word; word-wrap: break-word; white-space: normal; }
+        .options-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto; }
+        .opt-btn { background-color: #483519; color: #8CFF98; border: 1px solid #6F7C12; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; text-align: left; border-radius: 4px; }
 
-        /* --- MONSTRUO --- */
-        #monster {
-            position: absolute;
-            left: 80px;
-            bottom: 60px;
-            width: 45px;
-            height: 70px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 5;
-            transition: transform 0.05s, left 0.5s ease-in-out, bottom 0.1s linear;
-        }
-        .m-hair {
-            width: 100%;
-            height: 12px;
-            background-color: #000000;
-            border-radius: 4px 4px 0 0;
-        }
-        .m-head {
-            width: 85%;
-            height: 20px;
-            background-color: #AAD922;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            padding: 0 4px;
-        }
-        .m-head::before, .m-head::after {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background-color: #8CFF98;
-            box-shadow: 0 0 4px #8CFF98;
-        }
-        .m-body {
-            width: 100%;
-            height: 38px;
-            background-color: #483519;
-            border-top: 4px solid #6F7C12;
-            border-radius: 0 0 4px 4px;
-            position: relative;
-        }
-        .m-body::after {
-            content: '┼';
-            position: absolute;
-            top: 5px; left: 15px;
-            color: #AAD922;
-            font-size: 12px;
-        }
-
-        /* --- DAS SCHIFF VON VIKTOR --- */
-        #creator-ship {
-            position: absolute;
-            right: 40px;
-            bottom: 80px;
-            width: 110px;
-            height: 55px;
-            background-color: #483519;
-            border-top: 6px solid #6F7C12;
-            border-radius: 0 0 20px 20px;
-            animation: floatShip 3s ease-in-out infinite;
-            z-index: 4;
-            transition: right 1s ease-in-out, bottom 0.5s ease-in-out;
-        }
-        #creator-ship::after {
-            content: '';
-            position: absolute;
-            bottom: 55px; left: 35px;
-            width: 0; height: 0;
-            border-left: 50px solid transparent;
-            border-bottom: 60px solid #8CFF98;
-            opacity: 0.8;
-        }
-        .victor-sprite {
-            position: absolute;
-            top: -25px; left: 15px;
-            width: 15px; height: 25px;
-            background-color: #000000;
-            border: 2px solid #8CFF98;
-            border-radius: 3px 3px 0 0;
-        }
-
-        /* --- HINDERNISSE --- */
-        .obstacle {
-            position: absolute;
-            bottom: 60px;
-            width: 28px;
-            height: 45px;
-            background-color: #6F7C12;
-            border: 3px solid #000000;
-            box-shadow: inset 0 0 10px #483519;
-            border-radius: 3px;
-        }
-
-        #floor {
-            position: absolute;
-            bottom: 0; width: 100%; height: 60px;
-            background-color: #483519;
-            border-top: 6px solid #6F7C12;
-            z-index: 3;
-        }
-
-        /* --- DIALOGSYSTEM --- */
-        #dialogue-overlay {
-            position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 175px;
-            background-color: rgba(0, 0, 0, 0.95);
-            border-top: 4px solid #AAD922;
-            padding: 15px 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            z-index: 20;
-        }
-        .speaker-name {
-            font-weight: bold;
-            color: #AAD922;
-            margin-bottom: 5px;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-        }
-        .dialogue-text {
-            color: #8CFF98;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-        .options-container {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-        .opt-btn {
-            background-color: #483519;
-            color: #8CFF98;
-            border: 2px solid #6F7C12;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: bold;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-        .opt-btn:hover, .opt-btn:active {
-            background-color: #6F7C12;
-            color: #000000;
-        }
-
-        /* EFFEKTE */
-        .storm-flash {
-            animation: flash 0.5s ease-out infinite alternate;
-        }
-        @keyframes flash {
-            0%, 90% { background: linear-gradient(to bottom, #000000 60%, #483519 100%); }
-            95% { background: #6F7C12; }
-        }
-
-        /* INTERFAZ UI */
-        .ui-text { position: absolute; top: 15px; font-size: 1.1rem; font-weight: bold; z-index: 2; letter-spacing: 1px;}
-        #distance-ui { left: 20px; }
-        #high-ui { right: 20px; }
-
-        .screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.92);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;
-            padding: 20px;
-        }
-
-        .btn {
-            background-color: #AAD922; color: #000000; border: none;
-            padding: 14px 35px; font-size: 1.1rem; font-weight: bold;
-            cursor: pointer; margin-top: 20px; border-radius: 4px;
-            box-shadow: 0 4px 0 #6F7C12;
-            transition: background 0.2s;
-        }
-        .btn:hover, .btn:active { background-color: #8CFF98; }
-
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 20px; text-align: center; }
+        .btn { background-color: #AAD922; color: #000000; padding: 12px 25px; font-weight: bold; cursor: pointer; margin-top: 15px; border: none; border-radius: 4px; }
         .hidden { display: none !important; }
-        @keyframes floatShip {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(-2deg); }
-        }
+        @keyframes floatShip { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .storm-flash { animation: flash 0.5s ease-out infinite alternate; }
+        @keyframes flash { 0%, 90% { background: #000; } 95% { background: #6F7C12; } }
     </style>
 </head>
 <body>
-
     <h1>FRANKENSTEIN: DAS PLÄDOYER</h1>
-    
     <div id="viewport-wrapper">
         <div id="game-container">
-            <div id="distance-ui" class="ui-text">DISTANZ: <span id="distance">100</span>m</div>
-            <div id="high-ui" class="ui-text">REKORD: <span id="highscore">0</span>m</div>
-
-            <div id="monster">
-                <div class="m-hair"></div>
-                <div class="m-head"></div>
-                <div class="m-body"></div>
-            </div>
-
-            <div id="creator-ship">
-                <div class="victor-sprite"></div>
-            </div>
+            <div id="distance-ui" class="ui-text" style="position:absolute; top:10px; left:10px; z-index:2;">DISTANZ: <span id="distance">100</span>m</div>
             
+            <div id="monster"><div class="m-hair"></div><div class="m-head"></div><div class="m-body"></div></div>
+            <div id="creator-ship"><div class="victor-sprite"></div></div>
             <div id="floor"></div>
 
             <div id="dialogue-overlay" class="hidden">
-                <div>
-                    <div class="speaker-name" id="speaker">VIKTOR FRANKENSTEIN</div>
-                    <div class="dialogue-text" id="dialogue-box">...</div>
-                </div>
+                <div class="speaker-name" id="speaker">VIKTOR FRANKENSTEIN</div>
+                <div class="dialogue-text" id="dialogue-box">...</div>
                 <div class="options-container" id="options-box"></div>
             </div>
 
             <div id="start-screen" class="screen">
-                <h2 style="color: #8CFF98; margin-bottom: 15px; letter-spacing: 1px;">FOLGE DEINEM SCHÖPFER</h2>
-                <p style="text-align:center; max-width:85%; line-height: 1.4;">Viktor flieht in den Arktischen Ozean. Holen Sie ihn ein und fordern Sie Ihre Antworten ein.</p>
+                <h2>FOLGE DEINEM SCHÖPFER</h2>
                 <button class="btn" id="start-btn">ZUM HAFEN LAUFEN</button>
             </div>
-
+            
             <div id="gameover-screen" class="screen hidden">
-                <h2 style="color: #6F7C12; margin-bottom: 10px;">IM NEBEL VERLOREN</h2>
-                <p style="font-size: 0.9rem; margin-bottom: 10px;">Ihr Schöpfer ist entkommen...</p>
+                <h2>IM NEBEL VERLOREN</h2>
                 <button class="btn" id="retry-btn">ERNEUT VERSUCHEN</button>
             </div>
 
             <div id="ending-screen" class="screen hidden">
-                <h2 id="ending-title" style="color: #AAD922; margin-bottom: 15px; text-shadow: 0 0 10px #6F7C12;">DAS ENDE</h2>
-                <p id="ending-text" style="text-align:center; max-width:85%; line-height: 1.5; color: #8CFF98; margin-bottom: 15px;">...</p>
+                <h2 id="ending-title">DAS ENDE</h2>
+                <p id="ending-text" style="font-size:0.9rem; margin: 10px 0;"></p>
                 <button class="btn" id="main-menu-btn">ZUM HAUPTMENÜ</button>
             </div>
         </div>
     </div>
-
     <script>
         const monster = document.getElementById('monster');
         const ship = document.getElementById('creator-ship');
