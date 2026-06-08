@@ -230,6 +230,15 @@
         .ui-text { position: absolute; top: 15px; font-size: 0.9rem; font-weight: bold; z-index: 2; }
         #distance-ui { left: 15px; }
         #high-ui { right: 15px; }
+        #mobile-hint{
+            position:absolute;
+            right:15px;
+            bottom:75px;
+            color:#8CFF98;
+            opacity:.6;
+            font-size:.8rem;
+            z-index:10;
+        }
 
         .screen {
             position: absolute;
@@ -250,6 +259,7 @@
             box-shadow: 0 4px 0 #6F7C12;
         }
         .btn:hover { background-color: #8CFF98; }
+        .opt-btn,.btn{min-height:48px;touch-action:manipulation;}
 
         .end-title { font-size: 1.6rem; margin-bottom: 10px; text-shadow: 0 0 10px currentColor; text-align: center; }
         .end-desc { text-align: center; max-width: 85%; line-height: 1.4; color: #8CFF98; font-size: 0.9rem; }
@@ -265,7 +275,7 @@
 
     <h1>FRANKENSTEIN: DAS PLÄDOYER</h1>
     
-    <div id="game-container">
+    <div id="game-container">\n        <div id="mobile-hint">TAP TO JUMP</div>
         <div id="distance-ui" class="ui-text">DISTANZ: <span id="distance">100</span>m</div>
         <div id="high-ui" class="ui-text">AUFZEICHNEN: <span id="highscore">0</span>m</div>
 
@@ -335,7 +345,7 @@
         const optionsBox = document.getElementById('options-box');
 
         let isJumping = false;
-        let gravity = 0.6;
+        let gravity = 0.52;
         let position = 0;
         let velocity = 0;
         let gameActive = false;
@@ -345,7 +355,9 @@
 
         let obstacles = [];
         let spawnTimer = 0;
-        let gameSpeed = 5.5;
+        let gameSpeed = 4.6;
+        let animationId = null;
+        let lastSpawnTime = 0;
 
         const dialogueTree = {
             inicio: {
@@ -414,13 +426,13 @@
                 spawnTimer = 0;
             }
             moveObstacles();
-            requestAnimationFrame(gameLoop);
+            animationId = requestAnimationFrame(gameLoop);
         }
 
         function triggerJump() {
             if (!isJumping && gameActive) {
                 isJumping = true;
-                velocity = 12.5;
+                velocity = 13.8;
                 monster.style.transform = "scaleY(1.15) scaleX(0.9)";
                 setTimeout(() => monster.style.transform = "scaleY(1) scaleX(1)", 150);
             }
@@ -431,8 +443,8 @@
             if (e.code === 'Space' || e.code === 'ArrowUp') triggerJump(); 
         });
         
-        // touchstart es instantáneo en teléfonos, eliminando lag de clics comunes
-        container.addEventListener('touchstart', (e) => {
+        // pointerdown es instantáneo en teléfonos, eliminando lag de clics comunes
+        container.addEventListener('pointerdown', (e) => {
             // Evitamos que salte si se presionó un botón de la interfaz o del diálogo
             if (e.target.tagName !== 'BUTTON') {
                 e.preventDefault(); 
@@ -512,7 +524,7 @@
                     e.preventDefault();
                     showDialogue(opt.next);
                 };
-                btn.addEventListener('touchstart', selectOption);
+                btn.addEventListener('pointerdown', selectOption);
                 btn.addEventListener('click', selectOption);
                 
                 optionsBox.appendChild(btn);
@@ -540,7 +552,7 @@
 
         document.querySelectorAll('.restart-btn').forEach(btn => {
             const action = (e) => { e.stopPropagation(); e.preventDefault(); startGame(); };
-            btn.addEventListener('touchstart', action);
+            btn.addEventListener('pointerdown', action);
             btn.addEventListener('click', action);
         });
 
@@ -550,6 +562,7 @@
         }
 
         function startGame() {
+            if (animationId) cancelAnimationFrame(animationId);
             distanceToShip = 100;
             position = 0; isJumping = false; velocity = 0;
             
@@ -589,7 +602,7 @@
         // Setup inicial de botones principales
         const bindBtn = (id, action) => {
             const el = document.getElementById(id);
-            el.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); action(); });
+            el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); action(); });
             el.addEventListener('click', (e) => { e.stopPropagation(); action(); });
         };
         bindBtn('start-btn', startGame);
